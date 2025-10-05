@@ -5,6 +5,11 @@ import tempfile
 from pathlib import Path
 
 from presentation_feedback.core import transcribe_audio, extract_audio_features, CostTracker
+from presentation_feedback.agents import (
+    create_speech_analyzer,
+    create_content_analyzer,
+    create_orchestrator_agent,
+)
 
 
 st.set_page_config(
@@ -44,19 +49,33 @@ if uploaded_file:
 
             # 1. 書き起こし
             status_text.text("🎙️ 音声を書き起こし中...")
-            progress_bar.progress(25)
-            # transcription = transcribe_audio(audio_path)
-            # tracker.add_transcribe_cost(transcription["duration"])
+            progress_bar.progress(10)
+            transcription = transcribe_audio(audio_path)
+            tracker.add_transcribe_cost(transcription["duration"])
 
             # 2. 音声特徴量抽出
             status_text.text("📈 音声特徴量を抽出中...")
-            progress_bar.progress(50)
-            # audio_features = extract_audio_features(transcription)
+            progress_bar.progress(25)
+            audio_features = extract_audio_features(transcription)
 
             # 3. AI分析
-            status_text.text("🤖 AI分析中...")
-            progress_bar.progress(75)
-            # TODO: エージェント実行
+            status_text.text("🤖 話し方を分析中...")
+            progress_bar.progress(40)
+            speech_analyzer = create_speech_analyzer()
+            speech_result = speech_analyzer.analyze_speech(transcription, audio_features)
+            tracker.add_bedrock_cost("nova_lite", speech_result.get("input_tokens", 0), speech_result.get("output_tokens", 0))
+
+            status_text.text("🤖 内容を分析中...")
+            progress_bar.progress(60)
+            content_analyzer = create_content_analyzer()
+            content_result = content_analyzer.analyze_content(transcription)
+            tracker.add_bedrock_cost("nova_lite", content_result.get("input_tokens", 0), content_result.get("output_tokens", 0))
+
+            status_text.text("🤖 総合フィードバックを生成中...")
+            progress_bar.progress(80)
+            orchestrator = create_orchestrator_agent()
+            final_report = orchestrator.generate_feedback_report(speech_result, content_result)
+            tracker.add_bedrock_cost("claude_sonnet", final_report.get("input_tokens", 0), final_report.get("output_tokens", 0))
 
             # 4. 完了
             progress_bar.progress(100)
@@ -64,20 +83,60 @@ if uploaded_file:
 
             st.success("分析が完了しました！")
 
-            # 結果表示（仮）
-            st.subheader("📊 よかった点")
-            st.info("⚠ エージェント分析は未実装です")
+            # 結果表示
+            st.markdown("---")
 
+            # 総合サマリ
+            st.subheader("📝 総合サマリ")
+            st.write(final_report.get("summary", "（サマリなし）"))
+
+            # よかった点
+            st.subheader("✨ よかった点")
+            for i, strength in enumerate(final_report.get("strengths", []), 1):
+                with st.expander(f"{i}. {strength.get('category', '')}", expanded=True):
+                    st.write(strength.get('description', ''))
+                    if strength.get('evidence'):
+                        st.caption(f"📊 根拠: {strength['evidence']}")
+
+            # 改善点
             st.subheader("💡 改善点")
-            st.info("⚠ エージェント分析は未実装です")
+            for i, improvement in enumerate(final_report.get("improvements", []), 1):
+                priority = improvement.get('priority', 'medium')
+                priority_map = {
+                    "high": ("🔴", "error"),
+                    "medium": ("🟡", "warning"),
+                    "low": ("🟢", "info")
+                }
+                priority_mark, priority_type = priority_map.get(priority, ("🟡", "warning"))
+
+                with st.expander(f"{i}. {priority_mark} {improvement.get('category', '')}", expanded=True):
+                    st.write(f"**課題:** {improvement.get('issue', '')}")
+                    st.write(f"**提案:** {improvement.get('suggestion', '')}")
+
+            # 詳細フィードバック
+            with st.expander("📄 詳細フィードバック"):
+                detailed = final_report.get("detailed_feedback", {})
+                if detailed.get("speech_feedback"):
+                    st.markdown("**話し方について:**")
+                    st.write(detailed["speech_feedback"])
+                if detailed.get("content_feedback"):
+                    st.markdown("**内容について:**")
+                    st.write(detailed["content_feedback"])
+                if detailed.get("overall_impression"):
+                    st.markdown("**総合所感:**")
+                    st.write(detailed["overall_impression"])
 
             # コスト情報
+            st.markdown("---")
             st.subheader("💰 コスト情報")
             cost_info = tracker.get_summary()
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Transcribe", f"${cost_info['transcribe']['cost_usd']:.4f}")
-            col2.metric("Nova Lite", f"${cost_info['nova_lite']['cost_usd']:.4f}")
-            col3.metric("Claude", f"${cost_info['claude_sonnet']['cost_usd']:.4f}")
+            col1.metric("Transcribe", f"${cost_info['transcribe']['cost_usd']:.4f}",
+                       help=f"{cost_info['transcribe']['duration_sec']:.1f}秒")
+            col2.metric("Nova Lite", f"${cost_info['nova_lite']['cost_usd']:.4f}",
+                       help=f"入力: {cost_info['nova_lite']['input_tokens']:,}トークン\n出力: {cost_info['nova_lite']['output_tokens']:,}トークン")
+            col3.metric("Claude", f"${cost_info['claude_sonnet']['cost_usd']:.4f}",
+                       help=f"入力: {cost_info['claude_sonnet']['input_tokens']:,}トークン\n出力: {cost_info['claude_sonnet']['output_tokens']:,}トークン")
             col4.metric("合計", f"${cost_info['total_cost_usd']:.4f}")
 
         except NotImplementedError as e:

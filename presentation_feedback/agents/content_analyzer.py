@@ -1,5 +1,6 @@
 """内容分析エージェント - Amazon Nova Lite使用."""
 
+import os
 from strands import Agent
 from strands.models import BedrockModel
 from typing import Dict
@@ -41,34 +42,26 @@ JSON形式で以下の構造で出力してください:
 """
 
 
-def create_content_analyzer() -> Agent:
-    """
-    内容分析エージェントを作成.
+class ContentAnalyzer:
+    """内容分析エージェント."""
 
-    Returns:
-        Agent: Nova Liteベースのエージェント
-    """
-    model = BedrockModel(model_id=NOVA_LITE_MODEL_ID, region_name=AWS_REGION)
-    return Agent(
-        model=model,
-        system_prompt=SYSTEM_PROMPT
-    )
+    def __init__(self):
+        """初期化."""
+        model = BedrockModel(model_id=NOVA_LITE_MODEL_ID, region_name=AWS_REGION)
+        self.agent = Agent(model=model, system_prompt=SYSTEM_PROMPT)
 
+    def analyze_content(self, transcription: Dict) -> Dict:
+        """
+        プレゼン内容を分析.
 
-def analyze_content(transcription: Dict) -> Dict:
-    """
-    プレゼン内容を分析.
+        Args:
+            transcription: 書き起こし結果
 
-    Args:
-        transcription: 書き起こし結果
-
-    Returns:
-        dict: 分析結果
-    """
-    agent = create_content_analyzer()
-
-    # プロンプト構築
-    prompt = f"""
+        Returns:
+            dict: 分析結果
+        """
+        # プロンプト構築
+        prompt = f"""
 以下のプレゼンテーション書き起こしを分析してください。
 
 【総時間】
@@ -80,8 +73,18 @@ def analyze_content(transcription: Dict) -> Dict:
 上記のプレゼンテーション内容について、構成・言葉遣い・論理性を評価してください。
 """
 
-    # TODO: エージェント実行とトークン数取得
-    # result = agent(prompt)
-    # return result
+        # TODO: エージェント実行とトークン数取得
+        # result = self.agent(prompt)
+        # return result
 
-    raise NotImplementedError("analyze_content is not implemented yet")
+        raise NotImplementedError("analyze_content is not implemented yet")
+
+
+def create_content_analyzer() -> ContentAnalyzer:
+    """
+    内容分析エージェントを作成.
+
+    Returns:
+        ContentAnalyzer: 内容分析エージェント
+    """
+    return ContentAnalyzer()

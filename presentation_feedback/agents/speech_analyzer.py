@@ -31,39 +31,32 @@ JSON形式で以下の構造で出力してください:
 """
 
 
-def create_speech_analyzer() -> Agent:
-    """
-    音声特徴分析エージェントを作成.
+class SpeechAnalyzer:
+    """音声特徴分析エージェント."""
 
-    Returns:
-        Agent: Nova Liteベースのエージェント
-    """
-    model = BedrockModel(model_id=NOVA_LITE_MODEL_ID, region_name=AWS_REGION)
-    return Agent(
-        model=model,
-        system_prompt=SYSTEM_PROMPT
-    )
+    def __init__(self):
+        """初期化."""
+        model = BedrockModel(model_id=NOVA_LITE_MODEL_ID, region_name=AWS_REGION)
+        self.agent = Agent(model=model, system_prompt=SYSTEM_PROMPT)
 
+    def analyze_speech(self, transcription: Dict, audio_features: Dict) -> Dict:
+        """
+        音声特徴を分析.
 
-def analyze_speech_features(transcription: Dict, audio_features: Dict) -> Dict:
-    """
-    音声特徴を分析.
+        Args:
+            transcription: 書き起こし結果
+            audio_features: 音声特徴量（話速、ポーズ等）
 
-    Args:
-        transcription: 書き起こし結果
-        audio_features: 音声特徴量（話速、ポーズ等）
-
-    Returns:
-        dict: 分析結果
-    """
-    agent = create_speech_analyzer()
-
-    # プロンプト構築
-    prompt = f"""
+        Returns:
+            dict: 分析結果
+        """
+        # プロンプト構築
+        prompt = f"""
 以下の音声特徴量を分析してください。
 
 【音声特徴量】
 - 話速: {audio_features.get('speaking_rate', 0):.1f} 文字/分
+- フィラーワード: {audio_features.get('filler_words', [])}
 - ポーズ統計:
   - 総ポーズ数: {audio_features.get('pauses', {}).get('total', 0)}
   - 平均ポーズ時間: {audio_features.get('pauses', {}).get('avg_duration', 0):.2f}秒
@@ -75,8 +68,20 @@ def analyze_speech_features(transcription: Dict, audio_features: Dict) -> Dict:
 上記の情報をもとに、音声特徴についてフィードバックしてください。
 """
 
-    # TODO: エージェント実行とトークン数取得
-    # result = agent(prompt)
-    # return result
+        # TODO: エージェント実行とトークン数取得
+        # result = self.agent(prompt)
+        # return result
 
-    raise NotImplementedError("analyze_speech_features is not implemented yet")
+        raise NotImplementedError("analyze_speech is not implemented yet")
+
+
+def create_speech_analyzer() -> SpeechAnalyzer:
+    """
+    音声特徴分析エージェントを作成.
+
+    Returns:
+        SpeechAnalyzer: 音声特徴分析エージェント
+    """
+    return SpeechAnalyzer()
+
+

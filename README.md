@@ -34,19 +34,28 @@ aws sso login --profile your-profile
 
 ## 使い方
 
-### CLI版
+### Streamlit Web版（推奨）
 
-```bash
-uv run python cli.py /path/to/audio.mp3
-```
-
-### Streamlit版
+本格的な分析はStreamlit Webアプリをご利用ください。
 
 ```bash
 uv run streamlit run app_streamlit.py
 ```
 
 ブラウザで http://localhost:8501 にアクセスし、音声ファイルをアップロードして分析を開始します。
+
+### CLI版（デモ専用）
+
+CLIはデモ用です。ダミーデータで動作イメージを確認できます。
+
+```bash
+uv run cli.py samples/sample_presentation.mp3
+```
+
+**出力例:**
+- ✨ よかった点: 構成、話速、専門用語の説明など
+- 💡 改善点: フィラーワード、時間配分など（優先度付き）
+- 💰 コスト情報: AWS Transcribe、Amazon Bedrock の利用料金
 
 ## アーキテクチャ
 

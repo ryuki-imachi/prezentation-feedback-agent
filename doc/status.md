@@ -5,7 +5,7 @@
 ## 概要
 プレゼンテーション音声ファイルを分析し、話し方と内容について改善フィードバックを提供するマルチエージェントシステム
 
-## 現在のステータス: 初期構築完了・GitHubリポジトリ作成完了 ✅
+## 現在のステータス: インターフェース実装完了・デモモード動作確認完了 ✅
 
 ### 完了項目
 
@@ -36,10 +36,22 @@
   - BedrockModel使用
 
 #### 4. インターフェース
-- ✅ cli.py: CLIエントリポイント（スケルトン）
-- ✅ app_streamlit.py: Streamlit Webインターフェース（スケルトン）
+- ✅ cli.py: CLIエントリポイント（デモモード専用・完全実装）
+- ✅ app_streamlit.py: Streamlit Webインターフェース（本格実装用・UI完成）
+  - ファイルアップロード機能
+  - プログレスバー表示
+  - 結果表示（よかった点・改善点・詳細フィードバック）
+  - コストメトリクス表示
 
-#### 5. バージョン管理
+#### 5. デモモード実装
+- ✅ presentation_feedback/demo/: デモ用モジュール
+  - data.py: ダミーデータ定義
+  - transcriber.py: ダミー書き起こし
+  - audio_features.py: ダミー音声特徴量
+  - agents.py: ダミーエージェント実装
+- ✅ CLIデモモード動作確認完了
+
+#### 6. バージョン管理
 - ✅ Gitリポジトリ初期化
 - ✅ .gitignore設定（Python、AWS認証情報、サンプルファイル等を除外）
 - ✅ 初回コミット作成（21ファイル）
@@ -49,15 +61,16 @@
 
 ### 未実装項目（次のステップ）
 
-#### Phase 1: AWS Transcribe統合
+#### Phase 1: AWS Transcribe統合（Streamlit用）
 - [ ] transcriber.py の実装
   - AWS Transcribe APIを呼び出し
   - 音声ファイルをS3にアップロード
+    - s3://presentation-feedback/input/
   - 書き起こし結果を取得
   - セグメント情報（タイムスタンプ）を抽出
   - コスト計算（秒数ベース）
 
-#### Phase 2: エージェント実行ロジック
+#### Phase 2: エージェント実行ロジック（Streamlit用）
 - [ ] speech_analyzer.py の analyze_speech() 実装
   - エージェント実行
   - トークン数取得
@@ -71,19 +84,7 @@
   - トークン数取得
   - コスト計算
 
-#### Phase 3: インターフェース実装
-- [ ] cli.py の実装
-  - 4ステップ処理フロー
-  - 進捗表示
-  - 結果出力
-  - コスト表示
-- [ ] app_streamlit.py の実装
-  - ファイルアップロード
-  - プログレスバー
-  - 結果表示
-  - コストメトリクス表示
-
-#### Phase 4: テストと検証
+#### Phase 3: テストと検証
 - [ ] サンプル音声ファイルでのエンドツーエンドテスト
 - [ ] コスト計算の検証
 - [ ] エラーハンドリングの追加
@@ -115,9 +116,9 @@
 ```
 prezentation-feedback-agent/
 ├── README.md
-├── status.md (このファイル)
 ├── pyproject.toml
 ├── doc/
+│   ├── status.md (このファイル)
 │   ├── basic_design.md
 │   └── detailed_design.md
 ├── presentation_feedback/
@@ -127,18 +128,35 @@ prezentation-feedback-agent/
 │   │   ├── transcriber.py (AWS Transcribe統合)
 │   │   ├── audio_features.py (話速・間計算)
 │   │   └── cost_tracker.py (コスト追跡)
-│   └── agents/
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   ├── speech_analyzer.py (Nova Lite)
+│   │   ├── content_analyzer.py (Nova Lite)
+│   │   └── orchestrator.py (Claude Sonnet)
+│   └── demo/ (デモモード実装)
 │       ├── __init__.py
-│       ├── speech_analyzer.py (Nova Lite)
-│       ├── content_analyzer.py (Nova Lite)
-│       └── orchestrator.py (Claude Sonnet)
-├── cli.py (CLIインターフェース)
-├── app_streamlit.py (Webインターフェース)
+│       ├── data.py (ダミーデータ)
+│       ├── transcriber.py
+│       ├── audio_features.py
+│       └── agents.py
+├── cli.py (CLIインターフェース - デモ専用)
+├── app_streamlit.py (Webインターフェース - 本格実装)
 ├── samples/ (サンプルファイル用)
+│   └── sample_presentation.mp3 (ダミーファイル)
 └── tests/ (テストコード用)
 ```
 
 ## 次のアクション
-1. AWS Transcribe統合の実装
-2. エージェント実行ロジックの実装
-3. サンプル音声ファイルでのテスト
+1. AWS Transcribe統合の実装（Streamlit用）
+2. エージェント実行ロジックの実装（Streamlit用）
+3. サンプル音声ファイルでのエンドツーエンドテスト
+
+## デモモードの使い方
+
+```bash
+# CLIでデモを確認
+uv run cli.py samples/sample_presentation.mp3
+
+# Streamlitでデモを確認（未実装時）
+DEMO_MODE=1 uv run streamlit run app_streamlit.py
+```

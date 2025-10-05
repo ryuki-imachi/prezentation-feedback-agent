@@ -95,57 +95,59 @@ JSON形式で以下の構造で出力してください:
 """
 
 
-def create_orchestrator_agent() -> Agent:
-    """
-    監督者エージェントを作成.
+class OrchestratorAgent:
+    """監督者エージェント."""
 
-    Returns:
-        Agent: Claudeベースのエージェント
-    """
-    # 環境変数で明示的に指定されている場合はそれを使用
-    model_id = os.getenv("ORCHESTRATOR_MODEL_ID")
+    def __init__(self):
+        """初期化."""
+        # 環境変数で明示的に指定されている場合はそれを使用
+        model_id = os.getenv("ORCHESTRATOR_MODEL_ID")
 
-    if model_id:
-        print(f"環境変数で指定されたモデルを使用: {model_id}")
-    else:
-        # 自動選択（フォールバック機能付き）
-        model_id = get_claude_model_with_fallback()
+        if model_id:
+            print(f"環境変数で指定されたモデルを使用: {model_id}")
+        else:
+            # 自動選択（フォールバック機能付き）
+            model_id = get_claude_model_with_fallback()
 
-    model = BedrockModel(model_id=model_id, region_name=AWS_REGION)
-    return Agent(
-        model=model,
-        system_prompt=SYSTEM_PROMPT
-    )
+        model = BedrockModel(model_id=model_id, region_name=AWS_REGION)
+        self.agent = Agent(model=model, system_prompt=SYSTEM_PROMPT)
 
+    def generate_feedback_report(self, speech_result: Dict, content_result: Dict) -> Dict:
+        """
+        最終フィードバックレポートを生成.
 
-def generate_feedback_report(speech_analysis: Dict, content_analysis: Dict) -> Dict:
-    """
-    最終フィードバックレポートを生成.
+        Args:
+            speech_result: 音声特徴分析結果
+            content_result: 内容分析結果
 
-    Args:
-        speech_analysis: 音声特徴分析結果
-        content_analysis: 内容分析結果
-
-    Returns:
-        dict: 最終レポート
-    """
-    agent = create_orchestrator_agent()
-
-    # プロンプト構築
-    prompt = f"""
+        Returns:
+            dict: 最終レポート
+        """
+        # プロンプト構築
+        prompt = f"""
 以下の分析結果を統合して、最終フィードバックレポートを作成してください。
 
 【音声特徴分析】
-{speech_analysis}
+{speech_result}
 
 【内容分析】
-{content_analysis}
+{content_result}
 
 上記の分析結果をもとに、総合的なフィードバックレポートを生成してください。
 """
 
-    # TODO: エージェント実行とトークン数取得
-    # result = agent(prompt)
-    # return result
+        # TODO: エージェント実行とトークン数取得
+        # result = self.agent(prompt)
+        # return result
 
-    raise NotImplementedError("generate_feedback_report is not implemented yet")
+        raise NotImplementedError("generate_feedback_report is not implemented yet")
+
+
+def create_orchestrator_agent() -> OrchestratorAgent:
+    """
+    監督者エージェントを作成.
+
+    Returns:
+        OrchestratorAgent: 監督者エージェント
+    """
+    return OrchestratorAgent()
