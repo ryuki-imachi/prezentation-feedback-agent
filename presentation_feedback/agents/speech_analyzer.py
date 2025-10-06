@@ -49,14 +49,30 @@ class SpeechAnalyzer:
 
         Returns:
             dict: 分析結果
+                {
+                    "feedback": "分析結果テキスト",
+                    "strengths": [...],
+                    "improvements": [...],
+                    "usage": {
+                        "input_tokens": int,
+                        "output_tokens": int
+                    }
+                }
         """
+        # フィラーワードの整形
+        filler_words = audio_features.get('filler_words', {})
+        filler_summary = "\n".join(
+            [f"  - {word}: {data['count']}回" for word, data in filler_words.items()]
+        ) if filler_words else "  なし"
+
         # プロンプト構築
         prompt = f"""
 以下の音声特徴量を分析してください。
 
 【音声特徴量】
 - 話速: {audio_features.get('speaking_rate', 0):.1f} 文字/分
-- フィラーワード: {audio_features.get('filler_words', [])}
+- フィラーワード:
+{filler_summary}
 - ポーズ統計:
   - 総ポーズ数: {audio_features.get('pauses', {}).get('total', 0)}
   - 平均ポーズ時間: {audio_features.get('pauses', {}).get('avg_duration', 0):.2f}秒
@@ -68,11 +84,31 @@ class SpeechAnalyzer:
 上記の情報をもとに、音声特徴についてフィードバックしてください。
 """
 
-        # TODO: エージェント実行とトークン数取得
-        # result = self.agent(prompt)
-        # return result
+        # エージェント実行
+        print("🔍 音声特徴を分析中...")
+        result = self.agent.run(prompt)
 
-        raise NotImplementedError("analyze_speech is not implemented yet")
+        # 結果をパース
+        import json
+        try:
+            analysis = json.loads(result.output)
+        except json.JSONDecodeError:
+            # JSONパース失敗時のフォールバック
+            analysis = {
+                "feedback": result.output,
+                "strengths": [],
+                "improvements": []
+            }
+
+        # トークン使用量を追加
+        analysis["usage"] = {
+            "input_tokens": result.usage.input_tokens,
+            "output_tokens": result.usage.output_tokens
+        }
+
+        print(f"✓ 音声特徴分析完了 (入力: {result.usage.input_tokens}, 出力: {result.usage.output_tokens} トークン)")
+
+        return analysis
 
 
 def create_speech_analyzer() -> SpeechAnalyzer:

@@ -122,25 +122,72 @@ class OrchestratorAgent:
 
         Returns:
             dict: 最終レポート
+                {
+                    "summary": str,
+                    "strengths": [...],
+                    "improvements": [...],
+                    "detailed_feedback": str,
+                    "usage": {
+                        "input_tokens": int,
+                        "output_tokens": int
+                    }
+                }
         """
+        import json
+
+        # 分析結果を整形
+        speech_summary = {
+            "feedback": speech_result.get("feedback", ""),
+            "strengths": speech_result.get("strengths", []),
+            "improvements": speech_result.get("improvements", [])
+        }
+
+        content_summary = {
+            "structure": content_result.get("structure", {}),
+            "language": content_result.get("language", {}),
+            "strengths": content_result.get("strengths", []),
+            "improvements": content_result.get("improvements", [])
+        }
+
         # プロンプト構築
         prompt = f"""
 以下の分析結果を統合して、最終フィードバックレポートを作成してください。
 
 【音声特徴分析】
-{speech_result}
+{json.dumps(speech_summary, ensure_ascii=False, indent=2)}
 
 【内容分析】
-{content_result}
+{json.dumps(content_summary, ensure_ascii=False, indent=2)}
 
 上記の分析結果をもとに、総合的なフィードバックレポートを生成してください。
+よかった点と改善点をそれぞれ3-5個に絞り込み、優先順位をつけてください。
 """
 
-        # TODO: エージェント実行とトークン数取得
-        # result = self.agent(prompt)
-        # return result
+        # エージェント実行
+        print("🎯 最終レポートを生成中...")
+        result = self.agent.run(prompt)
 
-        raise NotImplementedError("generate_feedback_report is not implemented yet")
+        # 結果をパース
+        try:
+            report = json.loads(result.output)
+        except json.JSONDecodeError:
+            # JSONパース失敗時のフォールバック
+            report = {
+                "summary": result.output[:200],
+                "strengths": [],
+                "improvements": [],
+                "detailed_feedback": result.output
+            }
+
+        # トークン使用量を追加
+        report["usage"] = {
+            "input_tokens": result.usage.input_tokens,
+            "output_tokens": result.usage.output_tokens
+        }
+
+        print(f"✓ 最終レポート生成完了 (入力: {result.usage.input_tokens}, 出力: {result.usage.output_tokens} トークン)")
+
+        return report
 
 
 def create_orchestrator_agent() -> OrchestratorAgent:

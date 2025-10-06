@@ -63,19 +63,22 @@ if uploaded_file:
             progress_bar.progress(40)
             speech_analyzer = create_speech_analyzer()
             speech_result = speech_analyzer.analyze_speech(transcription, audio_features)
-            tracker.add_bedrock_cost("nova_lite", speech_result.get("input_tokens", 0), speech_result.get("output_tokens", 0))
+            speech_usage = speech_result.get("usage", {})
+            tracker.add_bedrock_cost("nova_lite", speech_usage.get("input_tokens", 0), speech_usage.get("output_tokens", 0))
 
             status_text.text("🤖 内容を分析中...")
             progress_bar.progress(60)
             content_analyzer = create_content_analyzer()
             content_result = content_analyzer.analyze_content(transcription)
-            tracker.add_bedrock_cost("nova_lite", content_result.get("input_tokens", 0), content_result.get("output_tokens", 0))
+            content_usage = content_result.get("usage", {})
+            tracker.add_bedrock_cost("nova_lite", content_usage.get("input_tokens", 0), content_usage.get("output_tokens", 0))
 
             status_text.text("🤖 総合フィードバックを生成中...")
             progress_bar.progress(80)
             orchestrator = create_orchestrator_agent()
             final_report = orchestrator.generate_feedback_report(speech_result, content_result)
-            tracker.add_bedrock_cost("claude_sonnet", final_report.get("input_tokens", 0), final_report.get("output_tokens", 0))
+            orchestrator_usage = final_report.get("usage", {})
+            tracker.add_bedrock_cost("claude_sonnet", orchestrator_usage.get("input_tokens", 0), orchestrator_usage.get("output_tokens", 0))
 
             # 4. 完了
             progress_bar.progress(100)

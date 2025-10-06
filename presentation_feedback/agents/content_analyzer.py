@@ -59,6 +59,16 @@ class ContentAnalyzer:
 
         Returns:
             dict: 分析結果
+                {
+                    "structure": {...},
+                    "language": {...},
+                    "strengths": [...],
+                    "improvements": [...],
+                    "usage": {
+                        "input_tokens": int,
+                        "output_tokens": int
+                    }
+                }
         """
         # プロンプト構築
         prompt = f"""
@@ -73,11 +83,39 @@ class ContentAnalyzer:
 上記のプレゼンテーション内容について、構成・言葉遣い・論理性を評価してください。
 """
 
-        # TODO: エージェント実行とトークン数取得
-        # result = self.agent(prompt)
-        # return result
+        # エージェント実行
+        print("📝 内容を分析中...")
+        result = self.agent.run(prompt)
 
-        raise NotImplementedError("analyze_content is not implemented yet")
+        # 結果をパース
+        import json
+        try:
+            analysis = json.loads(result.output)
+        except json.JSONDecodeError:
+            # JSONパース失敗時のフォールバック
+            analysis = {
+                "structure": {
+                    "has_intro": True,
+                    "has_conclusion": True,
+                    "feedback": result.output[:200]
+                },
+                "language": {
+                    "clarity": "medium",
+                    "feedback": ""
+                },
+                "strengths": [],
+                "improvements": []
+            }
+
+        # トークン使用量を追加
+        analysis["usage"] = {
+            "input_tokens": result.usage.input_tokens,
+            "output_tokens": result.usage.output_tokens
+        }
+
+        print(f"✓ 内容分析完了 (入力: {result.usage.input_tokens}, 出力: {result.usage.output_tokens} トークン)")
+
+        return analysis
 
 
 def create_content_analyzer() -> ContentAnalyzer:

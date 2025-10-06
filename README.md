@@ -13,23 +13,40 @@ AWS Transcribe と Amazon Bedrock (Claude) を活用して、プレゼンテー�
 
 ## セットアップ
 
-### 1. 環境変数の設定
-
-```bash
-cp .env.example .env
-# .envファイルを編集してAWS認証情報を設定
-```
-
-### 2. 依存関係のインストール
+### 1. 依存関係のインストール
 
 ```bash
 uv sync
 ```
 
-### 3. AWS認証
+### 2. AWS認証
 
 ```bash
 aws sso login --profile your-profile
+```
+
+### 3. S3バケットの作成（初回のみ）
+
+AWS Transcribe用のS3バケットを作成します。
+
+```bash
+# デフォルト設定（バケット名: presentation-feedback, リージョン: us-west-2）
+uv run python scripts/setup_s3_bucket.py
+
+# カスタム設定の場合
+export TRANSCRIBE_S3_BUCKET=my-custom-bucket-name
+export AWS_REGION=us-west-2
+uv run python scripts/setup_s3_bucket.py
+```
+
+### 4. 環境変数の設定（オプション）
+
+デフォルトから変更する場合は `.env` ファイルを作成:
+
+```bash
+# .env
+AWS_REGION=us-west-2
+TRANSCRIBE_S3_BUCKET=presentation-feedback
 ```
 
 ## 使い方

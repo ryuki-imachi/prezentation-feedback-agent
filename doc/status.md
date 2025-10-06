@@ -5,7 +5,7 @@
 ## 概要
 プレゼンテーション音声ファイルを分析し、話し方と内容について改善フィードバックを提供するマルチエージェントシステム
 
-## 現在のステータス: インターフェース実装完了・デモモード動作確認完了 ✅
+## 現在のステータス: Phase 1-2 実装完了・エンドツーエンドテスト準備完了 ✅
 
 ### 完了項目
 
@@ -59,30 +59,37 @@
   - リポジトリURL: https://github.com/ryuki-imachi/prezentation-feedback-agent
 - ✅ masterブランチにプッシュ
 
+#### 7. AWS Transcribe統合（Phase 1）
+- ✅ transcriber.py の完全実装
+  - S3アップロード機能
+  - AWS Transcribe API連携
+  - 書き起こし結果のパース処理
+  - セグメント情報抽出（タイムスタンプ付き）
+- ✅ S3バケット設定スクリプト（scripts/setup_s3_bucket.py）
+  - バケット作成
+  - ライフサイクルポリシー（30日後自動削除）
+  - パブリックアクセスブロック
+- ✅ 依存関係追加（requests）
+
+#### 8. エージェント実行ロジック（Phase 2）
+- ✅ speech_analyzer.py の analyze_speech() 実装
+  - Strands Agent実行
+  - JSON結果パース
+  - トークン使用量取得
+- ✅ content_analyzer.py の analyze_content() 実装
+  - Strands Agent実行
+  - JSON結果パース
+  - トークン使用量取得
+- ✅ orchestrator.py の generate_feedback_report() 実装
+  - Strands Agent実行
+  - 分析結果統合
+  - JSON結果パース
+  - トークン使用量取得
+- ✅ Streamlitアプリへのコスト計算統合
+  - CostTrackerとの連携
+  - トークン数の正確な追跡
+
 ### 未実装項目（次のステップ）
-
-#### Phase 1: AWS Transcribe統合（Streamlit用）
-- [ ] transcriber.py の実装
-  - AWS Transcribe APIを呼び出し
-  - 音声ファイルをS3にアップロード
-    - s3://presentation-feedback/input/
-  - 書き起こし結果を取得
-  - セグメント情報（タイムスタンプ）を抽出
-  - コスト計算（秒数ベース）
-
-#### Phase 2: エージェント実行ロジック（Streamlit用）
-- [ ] speech_analyzer.py の analyze_speech() 実装
-  - エージェント実行
-  - トークン数取得
-  - コスト計算
-- [ ] content_analyzer.py の analyze_content() 実装
-  - エージェント実行
-  - トークン数取得
-  - コスト計算
-- [ ] orchestrator.py の generate_feedback_report() 実装
-  - エージェント実行
-  - トークン数取得
-  - コスト計算
 
 #### Phase 3: テストと検証
 - [ ] サンプル音声ファイルでのエンドツーエンドテスト
@@ -147,9 +154,11 @@ prezentation-feedback-agent/
 ```
 
 ## 次のアクション
-1. AWS Transcribe統合の実装（Streamlit用）
-2. エージェント実行ロジックの実装（Streamlit用）
-3. サンプル音声ファイルでのエンドツーエンドテスト
+1. ✅ AWS Transcribe統合の実装（完了）
+2. ✅ エージェント実行ロジックの実装（完了）
+3. [ ] S3バケットのセットアップ実行
+4. [ ] サンプル音声ファイルでのエンドツーエンドテスト
+5. [ ] エラーハンドリングの強化
 
 ## デモモードの使い方
 
