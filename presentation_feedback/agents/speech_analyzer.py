@@ -6,9 +6,12 @@ from strands.models import BedrockModel
 from typing import Dict
 
 
-# オレゴンリージョン（us-west-2）のNova Lite
+# オレゴンリージョン（us-west-2）
 AWS_REGION = "us-west-2"
-NOVA_LITE_MODEL_ID = "us.amazon.nova-lite-v1:0"
+
+# モデルID設定
+# NOVA_LITE_MODEL_ID = "us.amazon.nova-lite-v1:0"  # 元のモデル（コメントアウト）
+CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"  # 一時的にClaude 4.5 Sonnetを使用
 
 SYSTEM_PROMPT = """あなたは音声特徴分析の専門家です。
 与えられた書き起こしデータと音声特徴量から、発表者の話し方について分析してください。
@@ -36,7 +39,8 @@ class SpeechAnalyzer:
 
     def __init__(self):
         """初期化."""
-        model = BedrockModel(model_id=NOVA_LITE_MODEL_ID, region_name=AWS_REGION)
+        # model = BedrockModel(model_id=NOVA_LITE_MODEL_ID, region_name=AWS_REGION)  # 元のモデル
+        model = BedrockModel(model_id=CLAUDE_MODEL_ID, region_name=AWS_REGION)  # 一時的にClaude使用
         self.agent = Agent(model=model, system_prompt=SYSTEM_PROMPT)
 
     def analyze_speech(self, transcription: Dict, audio_features: Dict) -> Dict:
