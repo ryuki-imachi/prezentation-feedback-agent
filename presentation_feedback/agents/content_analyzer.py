@@ -88,12 +88,17 @@ class ContentAnalyzer:
 """
 
         # エージェント実行
-        print("📝 内容を分析中...")
         result = self.agent(prompt)
 
         # 結果を取得
         import json
+        import re
         output_text = result.message['content'][0]['text']
+
+        # マークダウンのコードブロックを除去（```json ... ``` の場合）
+        json_match = re.search(r'```json\s*\n(.*?)\n```', output_text, re.DOTALL)
+        if json_match:
+            output_text = json_match.group(1)
 
         # 結果をパース
         try:
@@ -120,8 +125,6 @@ class ContentAnalyzer:
             "input_tokens": usage.get('inputTokens', 0),
             "output_tokens": usage.get('outputTokens', 0)
         }
-
-        print(f"✓ 内容分析完了 (入力: {usage.get('inputTokens', 0)}, 出力: {usage.get('outputTokens', 0)} トークン)")
 
         return analysis
 

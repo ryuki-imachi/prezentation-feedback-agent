@@ -63,6 +63,7 @@ if uploaded_file:
             progress_bar.progress(40)
             speech_analyzer = create_speech_analyzer()
             speech_result = speech_analyzer.analyze_speech(transcription, audio_features)
+
             speech_usage = speech_result.get("usage", {})
             tracker.add_bedrock_cost("nova_lite", speech_usage.get("input_tokens", 0), speech_usage.get("output_tokens", 0))
 
@@ -70,6 +71,7 @@ if uploaded_file:
             progress_bar.progress(60)
             content_analyzer = create_content_analyzer()
             content_result = content_analyzer.analyze_content(transcription)
+
             content_usage = content_result.get("usage", {})
             tracker.add_bedrock_cost("nova_lite", content_usage.get("input_tokens", 0), content_usage.get("output_tokens", 0))
 
@@ -77,8 +79,12 @@ if uploaded_file:
             progress_bar.progress(80)
             orchestrator = create_orchestrator_agent()
             final_report = orchestrator.generate_feedback_report(speech_result, content_result)
+
             orchestrator_usage = final_report.get("usage", {})
-            tracker.add_bedrock_cost("claude_sonnet", orchestrator_usage.get("input_tokens", 0), orchestrator_usage.get("output_tokens", 0))
+            if isinstance(orchestrator_usage, dict):
+                tracker.add_bedrock_cost("claude_sonnet", orchestrator_usage.get("input_tokens", 0), orchestrator_usage.get("output_tokens", 0))
+            else:
+                tracker.add_bedrock_cost("claude_sonnet", 0, 0)
 
             # 4. 完了
             progress_bar.progress(100)
@@ -118,16 +124,9 @@ if uploaded_file:
 
             # 詳細フィードバック
             with st.expander("📄 詳細フィードバック"):
-                detailed = final_report.get("detailed_feedback", {})
-                if detailed.get("speech_feedback"):
-                    st.markdown("**話し方について:**")
-                    st.write(detailed["speech_feedback"])
-                if detailed.get("content_feedback"):
-                    st.markdown("**内容について:**")
-                    st.write(detailed["content_feedback"])
-                if detailed.get("overall_impression"):
-                    st.markdown("**総合所感:**")
-                    st.write(detailed["overall_impression"])
+                detailed = final_report.get("detailed_feedback", "")
+                if detailed:
+                    st.write(detailed)
 
             # コスト情報
             st.markdown("---")
