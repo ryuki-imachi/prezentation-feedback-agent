@@ -87,17 +87,20 @@ class ContentAnalyzer:
         print("📝 内容を分析中...")
         result = self.agent(prompt)
 
-        # 結果をパース
+        # 結果を取得
         import json
+        output_text = result.message['content'][0]['text']
+
+        # 結果をパース
         try:
-            analysis = json.loads(result.output)
+            analysis = json.loads(output_text)
         except json.JSONDecodeError:
             # JSONパース失敗時のフォールバック
             analysis = {
                 "structure": {
                     "has_intro": True,
                     "has_conclusion": True,
-                    "feedback": result.output[:200]
+                    "feedback": output_text[:200]
                 },
                 "language": {
                     "clarity": "medium",
@@ -108,12 +111,13 @@ class ContentAnalyzer:
             }
 
         # トークン使用量を追加
+        usage = result.metrics.accumulated_usage
         analysis["usage"] = {
-            "input_tokens": result.usage.input_tokens,
-            "output_tokens": result.usage.output_tokens
+            "input_tokens": usage.get('inputTokens', 0),
+            "output_tokens": usage.get('outputTokens', 0)
         }
 
-        print(f"✓ 内容分析完了 (入力: {result.usage.input_tokens}, 出力: {result.usage.output_tokens} トークン)")
+        print(f"✓ 内容分析完了 (入力: {usage.get('inputTokens', 0)}, 出力: {usage.get('outputTokens', 0)} トークン)")
 
         return analysis
 

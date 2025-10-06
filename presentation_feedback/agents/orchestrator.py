@@ -167,25 +167,29 @@ class OrchestratorAgent:
         print("🎯 最終レポートを生成中...")
         result = self.agent(prompt)
 
+        # 結果を取得
+        output_text = result.message['content'][0]['text']
+
         # 結果をパース
         try:
-            report = json.loads(result.output)
+            report = json.loads(output_text)
         except json.JSONDecodeError:
             # JSONパース失敗時のフォールバック
             report = {
-                "summary": result.output[:200],
+                "summary": output_text[:200],
                 "strengths": [],
                 "improvements": [],
-                "detailed_feedback": result.output
+                "detailed_feedback": output_text
             }
 
         # トークン使用量を追加
+        usage = result.metrics.accumulated_usage
         report["usage"] = {
-            "input_tokens": result.usage.input_tokens,
-            "output_tokens": result.usage.output_tokens
+            "input_tokens": usage.get('inputTokens', 0),
+            "output_tokens": usage.get('outputTokens', 0)
         }
 
-        print(f"✓ 最終レポート生成完了 (入力: {result.usage.input_tokens}, 出力: {result.usage.output_tokens} トークン)")
+        print(f"✓ 最終レポート生成完了 (入力: {usage.get('inputTokens', 0)}, 出力: {usage.get('outputTokens', 0)} トークン)")
 
         return report
 
