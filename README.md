@@ -22,7 +22,11 @@ uv sync
 ### 2. AWS認証
 
 ```bash
-aws sso login --profile your-profile
+# SSOログイン
+aws sso login --profile sandbox-profile
+
+# 環境変数設定（重要）
+export AWS_PROFILE=sandbox-profile
 ```
 
 ### 3. S3バケットの作成（初回のみ）
@@ -56,6 +60,8 @@ TRANSCRIBE_S3_BUCKET=presentation-feedback
 本格的な分析はStreamlit Webアプリをご利用ください。
 
 ```bash
+# AWS_PROFILEを設定してから実行（重要）
+export AWS_PROFILE=sandbox-profile
 uv run streamlit run app_streamlit.py
 ```
 

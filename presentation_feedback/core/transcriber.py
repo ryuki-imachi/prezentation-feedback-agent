@@ -60,10 +60,7 @@ def _start_transcription_job(
             Media={"MediaFileUri": s3_uri},
             MediaFormat="mp3",  # 拡張子から自動判定も可能
             LanguageCode=language_code,
-            Settings={
-                "ShowSpeakerLabels": False,  # Phase 1では話者分離なし
-                "MaxSpeakerLabels": 1,
-            },
+            # Phase 1では話者分離なし（Settingsパラメータ不要）
         )
         print(f"✓ Transcriptionジョブ開始: {job_name}")
     except ClientError as e:
