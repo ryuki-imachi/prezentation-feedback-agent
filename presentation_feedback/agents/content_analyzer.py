@@ -85,7 +85,7 @@ class ContentAnalyzer:
 
         # エージェント実行
         print("📝 内容を分析中...")
-        result = self.agent.run(prompt)
+        result = self.agent(prompt)
 
         # 結果をパース
         import json

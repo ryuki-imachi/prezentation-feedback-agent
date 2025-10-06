@@ -86,7 +86,7 @@ class SpeechAnalyzer:
 
         # エージェント実行
         print("🔍 音声特徴を分析中...")
-        result = self.agent.run(prompt)
+        result = self.agent(prompt)
 
         # 結果をパース
         import json

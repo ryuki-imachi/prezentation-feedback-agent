@@ -165,7 +165,7 @@ class OrchestratorAgent:
 
         # エージェント実行
         print("🎯 最終レポートを生成中...")
-        result = self.agent.run(prompt)
+        result = self.agent(prompt)
 
         # 結果をパース
         try:
