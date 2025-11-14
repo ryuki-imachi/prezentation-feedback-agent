@@ -82,7 +82,7 @@ uv run cli.py samples/sample_presentation.mp3
 
 ## アーキテクチャ
 
-詳細は [DESIGN.md](DESIGN.md) を参照してください。
+詳細は [doc/basic_design.md](doc/basic_design.md) を参照してください。
 
 ### マルチエージェント構成
 1. **音声特徴分析エージェント**: 話速、フィラーワード、間の分析
