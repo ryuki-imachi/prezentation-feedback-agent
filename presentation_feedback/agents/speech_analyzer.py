@@ -1,4 +1,4 @@
-"""音声特徴分析エージェント - Amazon Nova Lite使用."""
+"""音声特徴分析エージェント"""
 
 import os
 from strands import Agent
@@ -10,8 +10,7 @@ from typing import Dict
 AWS_REGION = "us-west-2"
 
 # モデルID設定
-# NOVA_LITE_MODEL_ID = "us.amazon.nova-lite-v1:0"  # 元のモデル（コメントアウト）
-CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"  # 一時的にClaude 4.5 Sonnetを使用
+CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 SYSTEM_PROMPT = """あなたは音声特徴分析の専門家です。
 与えられた書き起こしデータと音声特徴量から、発表者の話し方について分析してください。

@@ -1,4 +1,4 @@
-"""内容分析エージェント - Amazon Nova Lite使用."""
+"""内容分析エージェント"""
 
 import os
 from strands import Agent
@@ -10,8 +10,7 @@ from typing import Dict
 AWS_REGION = "us-west-2"
 
 # モデルID設定
-# NOVA_LITE_MODEL_ID = "us.amazon.nova-lite-v1:0"  # 元のモデル（コメントアウト）
-CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"  # 一時的にClaude 4.5 Sonnetを使用
+CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 SYSTEM_PROMPT = """あなたはプレゼンテーション内容の分析専門家です。
 書き起こしテキストから、発表の構成と言葉遣いを評価してください。

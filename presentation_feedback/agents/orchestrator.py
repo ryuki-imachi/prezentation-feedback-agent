@@ -1,4 +1,4 @@
-"""監督者エージェント - Claude Sonnet使用."""
+"""監督者エージェント"""
 
 import os
 from strands import Agent
