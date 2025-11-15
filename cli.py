@@ -13,7 +13,6 @@ from presentation_feedback.demo import (
     create_content_analyzer_demo as create_content_analyzer,
     create_orchestrator_agent_demo as create_orchestrator_agent,
 )
-from presentation_feedback.core import CostTracker
 
 
 def main():
@@ -34,14 +33,10 @@ def main():
     print("※ 本格的な分析はStreamlitアプリをご利用ください: uv run streamlit run app_streamlit.py")
     print("=" * 60)
 
-    # コスト追跡開始
-    tracker = CostTracker()
-
     try:
         # 1. 書き起こし
         print("\n[1/4] 音声を書き起こし中...")
         transcription = transcribe_audio(args.audio_file, args.language)
-        tracker.add_transcribe_cost(transcription["duration"])
         print(f"✓ 完了 ({transcription['duration']:.1f}秒)")
 
         # 2. 音声特徴量抽出
@@ -56,19 +51,16 @@ def main():
         print("  - 話し方を分析中...")
         speech_analyzer = create_speech_analyzer()
         speech_result = speech_analyzer.analyze_speech(transcription, audio_features)
-        tracker.add_bedrock_cost("nova_lite", speech_result.get("input_tokens", 0), speech_result.get("output_tokens", 0))
 
         # 内容分析エージェント
         print("  - 内容を分析中...")
         content_analyzer = create_content_analyzer()
         content_result = content_analyzer.analyze_content(transcription)
-        tracker.add_bedrock_cost("nova_lite", content_result.get("input_tokens", 0), content_result.get("output_tokens", 0))
 
         # 監督者エージェント
         print("  - 総合フィードバックを生成中...")
         orchestrator = create_orchestrator_agent()
         final_report = orchestrator.generate_feedback_report(speech_result, content_result)
-        tracker.add_bedrock_cost("claude_sonnet", final_report.get("input_tokens", 0), final_report.get("output_tokens", 0))
 
         print("✓ AI分析完了")
 
@@ -93,17 +85,6 @@ def main():
             print(f"{i}. {priority_mark} {improvement.get('category', '')}")
             print(f"   課題: {improvement.get('issue', '')}")
             print(f"   提案: {improvement.get('suggestion', '')}")
-
-        # 5. コスト情報表示
-        print("\n" + "=" * 60)
-        print("💰 コスト情報")
-        print("=" * 60)
-        cost_info = tracker.get_summary()
-        print(f"AWS Transcribe: ${cost_info['transcribe']['cost_usd']:.4f} ({cost_info['transcribe']['duration_sec']:.1f}秒)")
-        print(f"Amazon Nova Lite: ${cost_info['nova_lite']['cost_usd']:.4f} (入力: {cost_info['nova_lite']['input_tokens']:,}トークン, 出力: {cost_info['nova_lite']['output_tokens']:,}トークン)")
-        print(f"Claude Sonnet: ${cost_info['claude_sonnet']['cost_usd']:.4f} (入力: {cost_info['claude_sonnet']['input_tokens']:,}トークン, 出力: {cost_info['claude_sonnet']['output_tokens']:,}トークン)")
-        print("-" * 60)
-        print(f"合計: ${cost_info['total_cost_usd']:.4f}")
 
         print("\n" + "=" * 60)
         print("✅ 分析完了！")
