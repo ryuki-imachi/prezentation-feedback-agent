@@ -6,7 +6,6 @@
 
 AWS Transcribe と Amazon Bedrock (Claude) を活用して、プレゼンテーション音声を自動分析します。
 
-### Phase 1: 音声ベース分析
 - 音声ファイル（MP3, WAV, M4A等）を入力
 - 話すスピード、フィラーワード、構成、言葉遣いを分析
 - よかった点・改善点をフィードバック
@@ -29,28 +28,13 @@ aws sso login --profile your-aws-profile
 export AWS_PROFILE=your-aws-profile
 ```
 
-### 3. S3バケットの作成（初回のみ）
+### 3. 環境変数の設定（オプション）
 
-AWS Transcribe用のS3バケットを作成します。
-
-```bash
-# デフォルト設定（バケット名: presentation-feedback, リージョン: us-west-2）
-uv run python scripts/setup_s3_bucket.py
-
-# カスタム設定の場合
-export TRANSCRIBE_S3_BUCKET=my-custom-bucket-name
-export AWS_REGION=us-west-2
-uv run python scripts/setup_s3_bucket.py
-```
-
-### 4. 環境変数の設定（オプション）
-
-デフォルトから変更する場合は `.env` ファイルを作成:
+`.env.example` を参考に `.env` ファイルを作成してください。
 
 ```bash
-# .env
-AWS_REGION=us-west-2
-TRANSCRIBE_S3_BUCKET=presentation-feedback
+cp .env.example .env
+# .envファイルを編集して設定を調整
 ```
 
 ## 使い方
@@ -74,11 +58,6 @@ CLIはデモ用です。ダミーデータで動作イメージを確認でき�
 ```bash
 uv run cli.py samples/sample_presentation.mp3
 ```
-
-**出力例:**
-- ✨ よかった点: 構成、話速、専門用語の説明など
-- 💡 改善点: フィラーワード、時間配分など（優先度付き）
-- 💰 コスト情報: AWS Transcribe、Amazon Bedrock の利用料金
 
 ## アーキテクチャ
 
