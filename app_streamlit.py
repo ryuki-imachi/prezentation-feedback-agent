@@ -4,7 +4,7 @@ import streamlit as st
 import tempfile
 from pathlib import Path
 
-from presentation_feedback.core import transcribe_audio, extract_audio_features, CostTracker
+from presentation_feedback.core import transcribe_audio, extract_audio_features
 from presentation_feedback.agents import (
     create_speech_analyzer,
     create_content_analyzer,
@@ -39,9 +39,6 @@ if uploaded_file:
             tmp_file.write(uploaded_file.read())
             audio_path = tmp_file.name
 
-        # コスト追跡
-        tracker = CostTracker()
-
         try:
             # プログレス表示
             progress_bar = st.progress(0)
@@ -51,7 +48,6 @@ if uploaded_file:
             status_text.text("🎙️ 音声を書き起こし中...")
             progress_bar.progress(10)
             transcription = transcribe_audio(audio_path)
-            tracker.add_transcribe_cost(transcription["duration"])
 
             # 2. 音声特徴量抽出
             status_text.text("📈 音声特徴量を抽出中...")
@@ -64,27 +60,15 @@ if uploaded_file:
             speech_analyzer = create_speech_analyzer()
             speech_result = speech_analyzer.analyze_speech(transcription, audio_features)
 
-            speech_usage = speech_result.get("usage", {})
-            tracker.add_bedrock_cost("nova_lite", speech_usage.get("input_tokens", 0), speech_usage.get("output_tokens", 0))
-
             status_text.text("🤖 内容を分析中...")
             progress_bar.progress(60)
             content_analyzer = create_content_analyzer()
             content_result = content_analyzer.analyze_content(transcription)
 
-            content_usage = content_result.get("usage", {})
-            tracker.add_bedrock_cost("nova_lite", content_usage.get("input_tokens", 0), content_usage.get("output_tokens", 0))
-
             status_text.text("🤖 総合フィードバックを生成中...")
             progress_bar.progress(80)
             orchestrator = create_orchestrator_agent()
             final_report = orchestrator.generate_feedback_report(speech_result, content_result)
-
-            orchestrator_usage = final_report.get("usage", {})
-            if isinstance(orchestrator_usage, dict):
-                tracker.add_bedrock_cost("claude_sonnet", orchestrator_usage.get("input_tokens", 0), orchestrator_usage.get("output_tokens", 0))
-            else:
-                tracker.add_bedrock_cost("claude_sonnet", 0, 0)
 
             # 4. 完了
             progress_bar.progress(100)
@@ -127,19 +111,6 @@ if uploaded_file:
                 detailed = final_report.get("detailed_feedback", "")
                 if detailed:
                     st.write(detailed)
-
-            # コスト情報
-            st.markdown("---")
-            st.subheader("💰 コスト情報")
-            cost_info = tracker.get_summary()
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Transcribe", f"${cost_info['transcribe']['cost_usd']:.4f}",
-                       help=f"{cost_info['transcribe']['duration_sec']:.1f}秒")
-            col2.metric("Nova Lite", f"${cost_info['nova_lite']['cost_usd']:.4f}",
-                       help=f"入力: {cost_info['nova_lite']['input_tokens']:,}トークン\n出力: {cost_info['nova_lite']['output_tokens']:,}トークン")
-            col3.metric("Claude", f"${cost_info['claude_sonnet']['cost_usd']:.4f}",
-                       help=f"入力: {cost_info['claude_sonnet']['input_tokens']:,}トークン\n出力: {cost_info['claude_sonnet']['output_tokens']:,}トークン")
-            col4.metric("合計", f"${cost_info['total_cost_usd']:.4f}")
 
         except NotImplementedError as e:
             st.error(f"⚠ エラー: {e}")
