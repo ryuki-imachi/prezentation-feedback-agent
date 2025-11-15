@@ -5,6 +5,8 @@ from strands import Agent
 from strands.models import BedrockModel
 from typing import Dict
 
+from .utils import parse_agent_response
+
 
 # オレゴンリージョン（us-west-2）
 AWS_REGION = "us-west-2"
@@ -56,7 +58,7 @@ class ContentAnalyzer:
 
     def analyze_content(self, transcription: Dict) -> Dict:
         """
-        プレゼン内容を分析.
+        プレゼン内容を分析
 
         Args:
             transcription: 書き起こし結果
@@ -90,41 +92,21 @@ class ContentAnalyzer:
         # エージェント実行
         result = self.agent(prompt)
 
-        # 結果を取得
-        import json
-        import re
-        output_text = result.message['content'][0]['text']
-
-        # マークダウンのコードブロックを除去（```json ... ``` の場合）
-        json_match = re.search(r'```json\s*\n(.*?)\n```', output_text, re.DOTALL)
-        if json_match:
-            output_text = json_match.group(1)
-
-        # 結果をパース
-        try:
-            analysis = json.loads(output_text)
-        except json.JSONDecodeError:
-            # JSONパース失敗時のフォールバック
-            analysis = {
-                "structure": {
-                    "has_intro": True,
-                    "has_conclusion": True,
-                    "feedback": output_text[:200]
-                },
-                "language": {
-                    "clarity": "medium",
-                    "feedback": ""
-                },
-                "strengths": [],
-                "improvements": []
-            }
-
-        # トークン使用量を追加
-        usage = result.metrics.accumulated_usage
-        analysis["usage"] = {
-            "input_tokens": usage.get('inputTokens', 0),
-            "output_tokens": usage.get('outputTokens', 0)
+        # 結果をパースして使用量を追加
+        fallback = {
+            "structure": {
+                "has_intro": True,
+                "has_conclusion": True,
+                "feedback": result.message['content'][0]['text'][:200]
+            },
+            "language": {
+                "clarity": "medium",
+                "feedback": ""
+            },
+            "strengths": [],
+            "improvements": []
         }
+        analysis = parse_agent_response(result, fallback_value=fallback)
 
         return analysis
 

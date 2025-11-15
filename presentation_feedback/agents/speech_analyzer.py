@@ -5,6 +5,8 @@ from strands import Agent
 from strands.models import BedrockModel
 from typing import Dict
 
+from .utils import parse_agent_response
+
 
 # オレゴンリージョン（us-west-2）
 AWS_REGION = "us-west-2"
@@ -45,7 +47,7 @@ class SpeechAnalyzer:
 
     def analyze_speech(self, transcription: Dict, audio_features: Dict) -> Dict:
         """
-        音声特徴を分析.
+        音声特徴を分析
 
         Args:
             transcription: 書き起こし結果
@@ -91,33 +93,13 @@ class SpeechAnalyzer:
         # エージェント実行
         result = self.agent(prompt)
 
-        # 結果を取得
-        import json
-        import re
-        output_text = result.message['content'][0]['text']
-
-        # マークダウンのコードブロックを除去（```json ... ``` の場合）
-        json_match = re.search(r'```json\s*\n(.*?)\n```', output_text, re.DOTALL)
-        if json_match:
-            output_text = json_match.group(1)
-
-        # 結果をパース
-        try:
-            analysis = json.loads(output_text)
-        except json.JSONDecodeError:
-            # JSONパース失敗時のフォールバック
-            analysis = {
-                "feedback": output_text,
-                "strengths": [],
-                "improvements": []
-            }
-
-        # トークン使用量を追加
-        usage = result.metrics.accumulated_usage
-        analysis["usage"] = {
-            "input_tokens": usage.get('inputTokens', 0),
-            "output_tokens": usage.get('outputTokens', 0)
+        # 結果をパースして使用量を追加
+        fallback = {
+            "feedback": result.message['content'][0]['text'],
+            "strengths": [],
+            "improvements": []
         }
+        analysis = parse_agent_response(result, fallback_value=fallback)
 
         return analysis
 

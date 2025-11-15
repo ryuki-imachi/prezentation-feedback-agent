@@ -1,9 +1,12 @@
 """監督者エージェント"""
 
+import json
 import os
 from strands import Agent
 from strands.models import BedrockModel
 from typing import Dict
+
+from .utils import parse_agent_response
 
 # オレゴンリージョン
 AWS_REGION = "us-west-2"
@@ -60,7 +63,7 @@ class OrchestratorAgent:
 
     def generate_feedback_report(self, speech_result: Dict, content_result: Dict) -> Dict:
         """
-        最終フィードバックレポートを生成.
+        最終フィードバックレポートを生成
 
         Args:
             speech_result: 音声特徴分析結果
@@ -79,8 +82,6 @@ class OrchestratorAgent:
                     }
                 }
         """
-        import json
-
         # 分析結果を整形
         speech_summary = {
             "feedback": speech_result.get("feedback", ""),
@@ -112,33 +113,14 @@ class OrchestratorAgent:
         # エージェント実行
         result = self.agent(prompt)
 
-        # 結果を取得
-        import re
-        output_text = result.message['content'][0]['text']
-
-        # マークダウンのコードブロックを除去（```json ... ``` の場合）
-        json_match = re.search(r'```json\s*\n(.*?)\n```', output_text, re.DOTALL)
-        if json_match:
-            output_text = json_match.group(1)
-
-        # 結果をパース
-        try:
-            report = json.loads(output_text)
-        except json.JSONDecodeError:
-            # JSONパース失敗時のフォールバック
-            report = {
-                "summary": output_text[:200],
-                "strengths": [],
-                "improvements": [],
-                "detailed_feedback": output_text
-            }
-
-        # トークン使用量を追加
-        usage = result.metrics.accumulated_usage
-        report["usage"] = {
-            "input_tokens": usage.get('inputTokens', 0),
-            "output_tokens": usage.get('outputTokens', 0)
+        # 結果をパースして使用量を追加
+        fallback = {
+            "summary": result.message['content'][0]['text'][:200],
+            "strengths": [],
+            "improvements": [],
+            "detailed_feedback": result.message['content'][0]['text']
         }
+        report = parse_agent_response(result, fallback_value=fallback)
 
         return report
 
