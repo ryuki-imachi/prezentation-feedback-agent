@@ -10,7 +10,8 @@ from typing import Dict
 AWS_REGION = "us-west-2"
 
 # モデルID設定
-CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+# CLAUDE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+CLAUDE_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 
 SYSTEM_PROMPT = """あなたはプレゼンテーション内容の分析専門家です。
 書き起こしテキストから、発表の構成と言葉遣いを評価してください。

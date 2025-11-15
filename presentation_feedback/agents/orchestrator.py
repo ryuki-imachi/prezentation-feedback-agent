@@ -9,7 +9,8 @@ from typing import Dict
 AWS_REGION = "us-west-2"
 
 # デフォルトモデル（環境変数で上書き可能）
-DEFAULT_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+# DEFAULT_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 
 
 SYSTEM_PROMPT = """あなたはプレゼンテーション指導の専門家です。
